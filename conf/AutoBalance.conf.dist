@@ -230,9 +230,58 @@ AutoBalance.reward.dungeonToken = 47241
 #       This conf option checks how many players are in the same
 #       map before allowing the reward to be carried out
 #       if MinPlayerReward is set to two and player is soloing this conf doesn't reward then.
-#		this will give more a challenge to players for low level instances.
+#       this will give more a challenge to players for low level instances.
 #
 #       Default:     1
 
 AutoBalance.reward.MinPlayerReward = 1
 #
+
+
+#
+##########################
+#
+# Immunities
+#
+##########################
+#
+#   Render the players and their pets immune to specific effects
+#
+#   AutoBalance.Immunities.Enable
+#       Enable / Disable player immunities
+#       Default: 0 (Disable)
+#                1 (Enable)
+#
+#   AutoBalance.Immunities.Pet.Enable
+#       Enable / Disable pet immunities
+#       Default: 0 (Disable)
+#                1 (Enable)
+#
+#   AutoBalance.Immunities.MaxPlayers
+#       Maximum number of players for which the player immunities will be active
+#       (immunities will be disabled if player count is greater than this value)
+#       Default: 3
+
+AutoBalance.Immunities.Enable            = 0
+AutoBalance.Immunities.Pet.Enable        = 0
+AutoBalance.Immunities.MaxPlayers        = 3
+
+#
+#   Enable / Disable specific immunities
+#       Default: 1 (Enabled)
+#                0 (Disabled)
+#
+
+AutoBalance.Immunities.Charm.Enable      = 1
+AutoBalance.Immunities.Fear.Enable       = 1
+AutoBalance.Immunities.Silence.Enable    = 1
+AutoBalance.Immunities.Sleep.Enable      = 1
+AutoBalance.Immunities.Stun.Enable       = 1
+AutoBalance.Immunities.Freeze.Enable     = 1
+AutoBalance.Immunities.Knockout.Enable   = 1
+AutoBalance.Immunities.Polymorph.Enable  = 1
+AutoBalance.Immunities.Horror.Enable     = 1
+AutoBalance.Immunities.Daze.Enable       = 1
+AutoBalance.Immunities.Sapped.Enable     = 1
+AutoBalance.Immunities.KnockBack.Enable  = 1
+AutoBalance.Immunities.PowerDrain.Enable = 1

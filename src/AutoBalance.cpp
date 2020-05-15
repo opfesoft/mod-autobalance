@@ -44,6 +44,7 @@
 #include "AutoBalance.h"
 #include "ScriptMgrMacros.h"
 #include "Group.h"
+#include "Pet.h"
 
 bool ABScriptMgr::OnBeforeModifyAttributes(Creature *creature, uint32 & instancePlayerCount) {
     bool ret=true;
@@ -109,8 +110,8 @@ static std::map<int, int> forcedCreatureIds;
 // cheaphack for difficulty server-wide.
 // Another value TODO in player class for the party leader's value to determine dungeon difficulty.
 static int8 PlayerCountDifficultyOffset, LevelScaling, higherOffset, lowerOffset;
-static uint32 rewardRaid, rewardDungeon, MinPlayerReward;
-static bool enabled, LevelEndGameBoost, DungeonsOnly, PlayerChangeNotify, LevelUseDb, rewardEnabled, DungeonScaleDownXP;
+static uint32 rewardRaid, rewardDungeon, MinPlayerReward, ImmunitiesMaxPlayers;
+static bool enabled, LevelEndGameBoost, DungeonsOnly, PlayerChangeNotify, LevelUseDb, rewardEnabled, DungeonScaleDownXP, ImmunitiesEnabled, ImmunitiesPetEnabled, ImmunitiesCharmEnabled, ImmunitiesFearEnabled, ImmunitiesSilenceEnabled, ImmunitiesSleepEnabled, ImmunitiesStunEnabled, ImmunitiesFreezeEnabled, ImmunitiesKnockoutEnabled, ImmunitiesPolymorphEnabled, ImmunitiesHorrorEnabled, ImmunitiesDazeEnabled, ImmunitiesSappedEnabled, ImmunitiesKnockBackEnabled, ImmunitiesPowerDrainEnabled;
 static float globalRate, healthMultiplier, manaMultiplier, armorMultiplier, damageMultiplier, MinHPModifier, MinManaModifier, MinDamageModifier,
 InflectionPoint, InflectionPointRaid, InflectionPointRaid10M, InflectionPointRaid25M, InflectionPointHeroic, InflectionPointRaidHeroic, InflectionPointRaid10MHeroic, InflectionPointRaid25MHeroic, BossInflectionMult;
 
@@ -168,6 +169,36 @@ void getAreaLevel(Map *map, uint8 areaid, uint8 &min, uint8 &max) {
     }
 }
 
+void ApplyImmunity(Unit* u, bool apply)
+{
+    if (ImmunitiesCharmEnabled)
+        u->ApplySpellImmune(90000, IMMUNITY_MECHANIC, MECHANIC_CHARM, apply);
+    if (ImmunitiesFearEnabled)
+        u->ApplySpellImmune(90001, IMMUNITY_MECHANIC, MECHANIC_FEAR, apply);
+    if (ImmunitiesSilenceEnabled)
+        u->ApplySpellImmune(90002, IMMUNITY_MECHANIC, MECHANIC_SILENCE, apply);
+    if (ImmunitiesSleepEnabled)
+        u->ApplySpellImmune(90003, IMMUNITY_MECHANIC, MECHANIC_SLEEP, apply);
+    if (ImmunitiesStunEnabled)
+        u->ApplySpellImmune(90004, IMMUNITY_MECHANIC, MECHANIC_STUN, apply);
+    if (ImmunitiesFreezeEnabled)
+        u->ApplySpellImmune(90005, IMMUNITY_MECHANIC, MECHANIC_FREEZE, apply);
+    if (ImmunitiesKnockoutEnabled)
+        u->ApplySpellImmune(90006, IMMUNITY_MECHANIC, MECHANIC_KNOCKOUT, apply);
+    if (ImmunitiesPolymorphEnabled)
+        u->ApplySpellImmune(90007, IMMUNITY_MECHANIC, MECHANIC_POLYMORPH, apply);
+    if (ImmunitiesHorrorEnabled)
+        u->ApplySpellImmune(90008, IMMUNITY_MECHANIC, MECHANIC_HORROR, apply);
+    if (ImmunitiesDazeEnabled)
+        u->ApplySpellImmune(90009, IMMUNITY_MECHANIC, MECHANIC_DAZE, apply);
+    if (ImmunitiesSappedEnabled)
+        u->ApplySpellImmune(90010, IMMUNITY_MECHANIC, MECHANIC_SAPPED, apply);
+    if (ImmunitiesKnockBackEnabled)
+        u->ApplySpellImmune(90011, IMMUNITY_EFFECT, SPELL_EFFECT_KNOCK_BACK, apply);
+    if (ImmunitiesPowerDrainEnabled)
+        u->ApplySpellImmune(90012, IMMUNITY_EFFECT, SPELL_EFFECT_POWER_DRAIN, apply);
+}
+
 class AutoBalance_WorldScript : public WorldScript
 {
     public:
@@ -194,13 +225,30 @@ class AutoBalance_WorldScript : public WorldScript
         LoadForcedCreatureIdsFromString(sConfigMgr->GetStringDefault("AutoBalance.ForcedID2", ""), 2);
         LoadForcedCreatureIdsFromString(sConfigMgr->GetStringDefault("AutoBalance.DisabledID", ""), 0);
 
-        enabled = sConfigMgr->GetBoolDefault("AutoBalance.enable", 1);
-        LevelEndGameBoost = sConfigMgr->GetBoolDefault("AutoBalance.LevelEndGameBoost", 1);
-        DungeonsOnly = sConfigMgr->GetBoolDefault("AutoBalance.DungeonsOnly", 1);
-        PlayerChangeNotify = sConfigMgr->GetBoolDefault("AutoBalance.PlayerChangeNotify", 1);
-        LevelUseDb = sConfigMgr->GetBoolDefault("AutoBalance.levelUseDbValuesWhenExists", 1);
-        rewardEnabled = sConfigMgr->GetBoolDefault("AutoBalance.reward.enable", 1);
-        DungeonScaleDownXP = sConfigMgr->GetBoolDefault("AutoBalance.DungeonScaleDownXP", 0);
+        enabled = sConfigMgr->GetBoolDefault("AutoBalance.enable", true);
+        LevelEndGameBoost = sConfigMgr->GetBoolDefault("AutoBalance.LevelEndGameBoost", true);
+        DungeonsOnly = sConfigMgr->GetBoolDefault("AutoBalance.DungeonsOnly", true);
+        PlayerChangeNotify = sConfigMgr->GetBoolDefault("AutoBalance.PlayerChangeNotify", true);
+        LevelUseDb = sConfigMgr->GetBoolDefault("AutoBalance.levelUseDbValuesWhenExists", true);
+        rewardEnabled = sConfigMgr->GetBoolDefault("AutoBalance.reward.enable", true);
+        DungeonScaleDownXP = sConfigMgr->GetBoolDefault("AutoBalance.DungeonScaleDownXP", false);
+
+        ImmunitiesEnabled = sConfigMgr->GetBoolDefault("AutoBalance.Immunities.Enable", false);
+        ImmunitiesPetEnabled = sConfigMgr->GetBoolDefault("AutoBalance.Immunities.Pet.Enable", false);
+        ImmunitiesMaxPlayers = sConfigMgr->GetIntDefault("AutoBalance.Immunities.MaxPlayers", 3);
+        ImmunitiesCharmEnabled = sConfigMgr->GetBoolDefault("AutoBalance.Immunities.Charm.Enable", true);
+        ImmunitiesFearEnabled = sConfigMgr->GetBoolDefault("AutoBalance.Immunities.Fear.Enable", true);
+        ImmunitiesSilenceEnabled = sConfigMgr->GetBoolDefault("AutoBalance.Immunities.Silence.Enable", true);
+        ImmunitiesSleepEnabled = sConfigMgr->GetBoolDefault("AutoBalance.Immunities.Sleep.Enable", true);
+        ImmunitiesStunEnabled = sConfigMgr->GetBoolDefault("AutoBalance.Immunities.Stun.Enable", true);
+        ImmunitiesFreezeEnabled = sConfigMgr->GetBoolDefault("AutoBalance.Immunities.Freeze.Enable", true);
+        ImmunitiesKnockoutEnabled = sConfigMgr->GetBoolDefault("AutoBalance.Immunities.Knockout.Enable", true);
+        ImmunitiesPolymorphEnabled = sConfigMgr->GetBoolDefault("AutoBalance.Immunities.Polymorph.Enable", true);
+        ImmunitiesHorrorEnabled = sConfigMgr->GetBoolDefault("AutoBalance.Immunities.Horror.Enable", true);
+        ImmunitiesDazeEnabled = sConfigMgr->GetBoolDefault("AutoBalance.Immunities.Daze.Enable", true);
+        ImmunitiesSappedEnabled = sConfigMgr->GetBoolDefault("AutoBalance.Immunities.Sapped.Enable", true);
+        ImmunitiesKnockBackEnabled = sConfigMgr->GetBoolDefault("AutoBalance.Immunities.KnockBack.Enable", true);
+        ImmunitiesPowerDrainEnabled = sConfigMgr->GetBoolDefault("AutoBalance.Immunities.PowerDrain.Enable", true);
 
         LevelScaling = sConfigMgr->GetIntDefault("AutoBalance.levelScaling", 1);
         PlayerCountDifficultyOffset = sConfigMgr->GetIntDefault("AutoBalance.playerCountDifficultyOffset", 0);
@@ -238,6 +286,71 @@ class AutoBalance_PlayerScript : public PlayerScript
         {
         }
 
+        void OnBeforeUpdate(Player *player, uint32 /*p_time*/) override
+        {
+            if (!ImmunitiesEnabled)
+                return;
+
+            Map* map = player->GetMap();
+
+            if (map->IsDungeon() && map->GetPlayersCountExceptGMs() <= ImmunitiesMaxPlayers)
+            {
+                if (ImmunitiesCharmEnabled && player->HasAuraType(SPELL_AURA_MOD_CHARM))
+                    if (Unit* charmer = player->GetCharmerOrOwner())
+                    {
+                        player->RemoveAurasByType(SPELL_AURA_MOD_CHARM);
+                        charmer->SetInCombatWith(player);
+                        charmer->AddThreat(player, 1); // add threat to prevent the charmer from evading
+                    }
+
+                if (ImmunitiesSilenceEnabled && player->HasAuraType(SPELL_AURA_MOD_SILENCE))
+                    player->RemoveAurasByType(SPELL_AURA_MOD_SILENCE);
+
+                if (ImmunitiesFearEnabled)
+                {
+                    if (player->HasAuraType(SPELL_AURA_MOD_FEAR))
+                        player->RemoveAurasByType(SPELL_AURA_MOD_FEAR);
+
+                    if (ImmunitiesPetEnabled)
+                        if (Pet* pet = player->GetPet())
+                            if (pet->HasAuraType(SPELL_AURA_MOD_FEAR))
+                                pet->RemoveAurasByType(SPELL_AURA_MOD_FEAR);
+                }
+            }
+        }
+
+        void OnAfterGuardianInitStatsForLevel(Player* player, Guardian* guardian) override
+        {
+            if (!ImmunitiesEnabled || !ImmunitiesPetEnabled)
+                return;
+
+            if (Pet* pet = guardian->ToPet())
+            {
+                Map* map = pet->GetMap();
+
+                if (map->IsDungeon() && map->GetPlayersCountExceptGMs() <= ImmunitiesMaxPlayers)
+                {
+                    ApplyImmunity(pet->ToUnit(), true);
+
+                    if (PlayerChangeNotify)
+                    {
+                        ChatHandler chatHandle = ChatHandler(player->GetSession());
+                        chatHandle.PSendSysMessage("|cffFF0000 [AutoBalance]|r|cffFF8000 Pet immunities applied |r");
+                    }
+                }
+                else
+                {
+                    ApplyImmunity(pet->ToUnit(), false);
+
+                    if (PlayerChangeNotify && map->IsDungeon())
+                    {
+                        ChatHandler chatHandle = ChatHandler(player->GetSession());
+                        chatHandle.PSendSysMessage("|cffFF0000 [AutoBalance]|r|cffFF8000 Pet immunities removed |r");
+                    }
+                }
+            }
+        }
+
         void OnLogin(Player *Player) override
         {
             if (sConfigMgr->GetBoolDefault("AutoBalanceAnnounce.enable", true)) {
@@ -245,7 +358,7 @@ class AutoBalance_PlayerScript : public PlayerScript
             }
         }
 
-        virtual void OnLevelChanged(Player* player, uint8 /*oldlevel*/) override
+        void OnLevelChanged(Player* player, uint8 /*oldlevel*/) override
         {
             if (!enabled || !player)
                 return;
@@ -344,6 +457,87 @@ class AutoBalance_AllMapScript : public AllMapScript
         {
         }
 
+        void ApplyImmunities(Map* map, AutoBalanceMapInfo* mapABInfo, Player* player, bool mapEnter)
+        {
+            if (!ImmunitiesEnabled)
+                return;
+
+            Map::PlayerList const& playerList = map->GetPlayers();
+
+            if (mapEnter)
+            {
+                if (map->IsDungeon())
+                {
+                    if (mapABInfo->playerCount <= ImmunitiesMaxPlayers)
+                    {
+                        if (player)
+                        {
+                            ApplyImmunity(player->ToUnit(), true);
+
+                            if (PlayerChangeNotify)
+                            {
+                                ChatHandler chatHandle = ChatHandler(player->GetSession());
+                                chatHandle.PSendSysMessage("|cffFF0000 [AutoBalance]|r|cffFF8000 Player immunities applied |r");
+                            }
+                        }
+                    }
+                    else if (!playerList.isEmpty())
+                        for (Map::PlayerList::const_iterator playerIteration = playerList.begin(); playerIteration != playerList.end(); ++playerIteration)
+                            if (Player* playerHandle = playerIteration->GetSource())
+                            {
+                                ApplyImmunity(playerHandle->ToUnit(), false);
+
+                                if (PlayerChangeNotify)
+                                {
+                                    ChatHandler chatHandle = ChatHandler(playerHandle->GetSession());
+                                    chatHandle.PSendSysMessage("|cffFF0000 [AutoBalance]|r|cffFF8000 Player immunities removed |r");
+                                }
+
+                                if (ImmunitiesPetEnabled)
+                                    if (Pet* pet = playerHandle->GetPet())
+                                    {
+                                        ApplyImmunity(pet->ToUnit(), false);
+
+                                        if (PlayerChangeNotify)
+                                        {
+                                            ChatHandler chatHandle = ChatHandler(playerHandle->GetSession());
+                                            chatHandle.PSendSysMessage("|cffFF0000 [AutoBalance]|r|cffFF8000 Pet immunities removed |r");
+                                        }
+                                    }
+                            }
+                }
+                else if (player)
+                {
+                    ApplyImmunity(player->ToUnit(), false);
+                }
+            }
+            else if (map->IsDungeon() && mapABInfo->playerCount <= ImmunitiesMaxPlayers && !playerList.isEmpty())
+                for (Map::PlayerList::const_iterator playerIteration = playerList.begin(); playerIteration != playerList.end(); ++playerIteration)
+                    if (Player* playerHandle = playerIteration->GetSource())
+                        if (!player || playerHandle->GetGUID() != player->GetGUID())
+                        {
+                            ApplyImmunity(playerHandle->ToUnit(), true);
+
+                            if (PlayerChangeNotify)
+                            {
+                                ChatHandler chatHandle = ChatHandler(playerHandle->GetSession());
+                                chatHandle.PSendSysMessage("|cffFF0000 [AutoBalance]|r|cffFF8000 Player immunities applied |r");
+                            }
+
+                            if (ImmunitiesPetEnabled)
+                                if (Pet* pet = playerHandle->GetPet())
+                                {
+                                    ApplyImmunity(pet->ToUnit(), true);
+
+                                    if (PlayerChangeNotify)
+                                    {
+                                        ChatHandler chatHandle = ChatHandler(playerHandle->GetSession());
+                                        chatHandle.PSendSysMessage("|cffFF0000 [AutoBalance]|r|cffFF8000 Pet immunities applied |r");
+                                    }
+                                }
+                        }
+        }
+
         void OnPlayerEnterAll(Map* map, Player* player)
         {
             if (!enabled)
@@ -395,6 +589,8 @@ class AutoBalance_AllMapScript : public AllMapScript
                     }
                 }
             }
+
+            ApplyImmunities(map, mapABInfo, player, true);
         }
 
         void OnPlayerLeaveAll(Map* map, Player* player)
@@ -429,12 +625,14 @@ class AutoBalance_AllMapScript : public AllMapScript
                             if (Player* playerHandle = playerIteration->GetSource())
                             {
                                 ChatHandler chatHandle = ChatHandler(playerHandle->GetSession());
-                                chatHandle.PSendSysMessage("|cffFF0000 [-AutoBalance]|r|cffFF8000 %s left the Instance %s. Auto setting player count to %u (Player Difficulty Offset = %u) |r", player->GetName().c_str(), map->GetMapName(), mapABInfo->playerCount, PlayerCountDifficultyOffset);
+                                chatHandle.PSendSysMessage("|cffFF0000 [AutoBalance]|r|cffFF8000 %s left the Instance %s. Auto setting player count to %u (Player Difficulty Offset = %u) |r", player->GetName().c_str(), map->GetMapName(), mapABInfo->playerCount, PlayerCountDifficultyOffset);
                             }
                         }
                     }
                 }
             }
+
+            ApplyImmunities(map, mapABInfo, player, false);
         }
 };
 
