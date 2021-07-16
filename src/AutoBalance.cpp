@@ -568,8 +568,7 @@ class AutoBalance_AllMapScript : public AllMapScript
                 }
             }
 
-            mapABInfo->playerCount++; //(maybe we've to found a safe solution to avoid player recount each time)
-            //mapABInfo->playerCount = map->GetPlayersCountExceptGMs();
+            mapABInfo->playerCount = map->GetPlayersCountExceptGMs();
 
             if (PlayerChangeNotify)
             {
@@ -603,8 +602,30 @@ class AutoBalance_AllMapScript : public AllMapScript
 
             AutoBalanceMapInfo *mapABInfo=map->CustomData.GetDefault<AutoBalanceMapInfo>("AutoBalanceMapInfo");
 
-            mapABInfo->playerCount--;// (maybe we've to found a safe solution to avoid player recount each time)
-            // mapABInfo->playerCount = map->GetPlayersCountExceptGMs();
+            if (map->GetEntry() && map->GetEntry()->IsDungeon())
+            {
+                bool keepPlayerCount = false;
+                Map::PlayerList const& pl = map->GetPlayers();
+                for (Map::PlayerList::const_iterator itr = pl.begin(); itr != pl.end(); ++itr)
+                    if (Player* plr = itr->GetSource())
+                        if (plr->IsInCombat())
+                        {
+                            keepPlayerCount = true;
+                            break;
+                        }
+
+                if (keepPlayerCount)
+                {
+                    for (Map::PlayerList::const_iterator itr = pl.begin(); itr != pl.end(); ++itr)
+                        if (Player* plr = itr->GetSource())
+                        {
+                            ChatHandler chat = ChatHandler(plr->GetSession());
+                            chat.PSendSysMessage("|cffFF0000 [AutoBalance]|r|cffFF8000 %s left the instance %s during combat, re-enter the instance to fix the scaling |r", player->GetName().c_str(), map->GetMapName());
+                        }
+                }
+                else
+                    mapABInfo->playerCount = map->GetPlayersCountExceptGMs() - 1;
+            }
 
             // always check level, even if not conf enabled
             // because we can enable at runtime and we need this information
