@@ -1,32 +1,20 @@
 /*
-* Copyright (C) 2018 AzerothCore <http://www.azerothcore.org>
-* Copyright (C) 2012 CVMagic <http://www.trinitycore.org/f/topic/6551-vas-autobalance/>
-* Copyright (C) 2008-2010 TrinityCore <http://www.trinitycore.org/>
-* Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
-* Copyright (C) 1985-2010 KalCorp  <http://vasserver.dyndns.org/>
-*
-* This program is free software; you can redistribute it and/or modify it
-* under the terms of the GNU General Public License as published by the
-* Free Software Foundation; either version 2 of the License, or (at your
-* option) any later version.
-*
-* This program is distributed in the hope that it will be useful, but WITHOUT
-* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-* FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
-* more details.
-*
-* You should have received a copy of the GNU General Public License along
-* with this program. If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Copyright (C) 2020+     Project "Sol" <https://gitlab.com/opfesoft/sol>, released under the GNU GPLv2 license: https://gitlab.com/opfesoft/mod-ah-bot/-/blob/master/LICENSE.md; you may redistribute it and/or modify it under version 2 of the License, or (at your option), any later version.
+ * Copyright (C) 2018-2020 AzerothCore <www.azerothcore.org>, released under GNU GPL v2 license, you may redistribute it and/or modify it under version 2 of the License, or (at your option), any later version.
+ * Copyright (C) 2012      CVMagic <http://www.trinitycore.org/f/topic/6551-vas-autobalance/>
+ * Copyright (C) 2008-2010 TrinityCore <http://www.trinitycore.org/>
+ * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ * Copyright (C) 1985-2010 KalCorp <http://vasserver.dyndns.org/>
+ */
 
 /*
-* Script Name: AutoBalance
-* Original Authors: KalCorp and Vaughner
-* Maintainer(s): AzerothCore
-* Original Script Name: AutoBalance
-* Description: This script is intended to scale based on number of players,
-* instance mobs & world bosses' level, health, mana, and damage.
-*/
+ * Script Name: AutoBalance
+ * Original Authors: KalCorp and Vaughner
+ * Maintainer(s): Project "Sol"
+ * Original Script Name: AutoBalance
+ * Description: This script is intended to scale based on number of players,
+ * instance mobs & world bosses' level, health, mana, and damage.
+ */
 
 
 #include "Configuration/Config.h"
