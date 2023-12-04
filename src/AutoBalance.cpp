@@ -429,7 +429,7 @@ class AutoBalance_UnitScript : public UnitScript
             return damage;
 
 
-        if ((attacker->IsHunterPet() || attacker->IsPet() || attacker->IsSummon()) && attacker->IsControlledByPlayer())
+        if ((attacker->IsHunterPet() || attacker->IsPet() || attacker->IsSummon() || attacker->IsVehicle()) && attacker->IsControlledByPlayer())
             return damage;
 
         return damage * damageMultiplier;
