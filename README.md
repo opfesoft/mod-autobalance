@@ -1,4 +1,4 @@
-## AutoBalanceModule
+## AutoBalanceModule<br>(Discontinued as of 2024-07-29)
 
 This module is intended to scale based on number of players, instance mobs and bosses' health, mana, and damage.
 
